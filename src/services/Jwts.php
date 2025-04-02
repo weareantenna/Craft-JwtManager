@@ -225,7 +225,7 @@ class Jwts extends Base
     public function getJwtById(int $id): ?Jwt
     {
         $record = $this->_createJwtQuery()
-            ->where(['jwts.id' => $id])
+            ->where(['id' => $id])
             ->one();
 
         return $record ? new Jwt($record) : null;
@@ -521,7 +521,7 @@ class Jwts extends Base
     private function _createJwtQuery(): Query
     {
         return (new Query())
-            ->select('jwts.*')
-            ->from('{{%jwts}} jwts');
+            ->select('*')
+            ->from('{{%jwtmanager_jwts}}');
     }
 }
