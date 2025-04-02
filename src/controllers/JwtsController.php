@@ -25,7 +25,7 @@ class JwtsController extends Controller
     /**
      * @var string[]
      */
-    protected array $allowAnonymous = [
+    protected array|int|bool $allowAnonymous = [
         'use-refresh'
     ];
 
@@ -81,11 +81,11 @@ class JwtsController extends Controller
                 'value' => Jwt::TYPE_ONE_TIME_LOGIN
             ]
         ];
-
+        
         return $this->renderTemplate('jwt-manager/jwts/_edit', [
-            'jwt' => $jwt,
-            'jwtId' => $jwtId,
-            'brandNewJwt' => !$jwt->id,
+            'jwt' => $jwt ?? null,
+            'jwtId' => $jwtId ?? null,
+            'brandNewJwt' => $jwt && $jwt->id ? false : true,
             'title' => $title,
             'jwtTypes' => $jwtTypes
         ]);
