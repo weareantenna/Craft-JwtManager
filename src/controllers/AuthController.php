@@ -25,27 +25,27 @@ class AuthController extends Controller
     /**
      * @var User Current logged in user.
      */
-    protected $currentUser;
+    protected ?User $currentUser;
 
     /**
      * @var string|null Found token from auto login.
      */
-    protected $token;
+    protected ?string $token;
 
     /**
      * @var string|null Found refresh token from auto login.
      */
-    protected $refreshToken;
+    protected ?string $refreshToken;
 
     /**
      * @var bool Allow all requests as we will ensure that we require a user.
      */
-    protected $allowAnonymous = true;
+    protected bool $allowAnonymous = true;
 
     /**
      * Init controller.
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -120,7 +120,7 @@ class AuthController extends Controller
      * @param string $message
      * @param int    $status  [Optional] HTTP status code.
      */
-    private function _terminate(string $message, int $status = 401)
+    private function _terminate(string $message, int $status = 401): void
     {
         // Find our server protocol
         $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');

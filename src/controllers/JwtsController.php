@@ -25,7 +25,7 @@ class JwtsController extends Controller
     /**
      * @var string[]
      */
-    protected $allowAnonymous = [
+    protected array $allowAnonymous = [
         'use-refresh'
     ];
 
@@ -50,7 +50,7 @@ class JwtsController extends Controller
      * @return Response
      * @throws NotFoundHttpException
      */
-    public function actionEdit(int $jwtId = null, Jwt $jwt = null): Response
+    public function actionEdit(?int $jwtId = null, ?Jwt $jwt = null): Response
     {
         if ($jwtId !== null) {
             if ($jwt === null) {
@@ -96,7 +96,7 @@ class JwtsController extends Controller
      *
      * @return Response|null
      */
-    public function actionSave()
+    public function actionSave(): ?Response
     {
         $this->requirePostRequest();
 

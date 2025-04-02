@@ -28,22 +28,22 @@ class Base extends Component
     /**
      * @var Settings Plugin settings.
      */
-    protected $settings;
+    protected Settings $settings;
 
     /**
      * @var string Secret key for JWT generation.
      */
-    protected $secretKey;
+    protected string $secretKey;
 
     /**
      * @var string|null Current class using this base.
      */
-    private $_currentClass;
+    private ?string $_currentClass;
 
     /**
      * @var array Error that occurred for this class.
      */
-    private $_currentError = [];
+    private array $_currentError = [];
 
     // Public Methods
     // =========================================================================
@@ -53,7 +53,7 @@ class Base extends Component
      *
      * @return void
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -117,7 +117,7 @@ class Base extends Component
      *
      * @return void
      */
-    public function setError(string $message, array $params = [])
+    public function setError(string $message, array $params = []): void
     {
         if (!isset($this->_currentError[$this->_currentClass])) {
             $this->_currentError[$this->_currentClass] = Craft::t('jwt-manager', $message, $params);

@@ -36,27 +36,27 @@ class JwtManager extends Plugin
     /**
      * @var JwtManager
      */
-    public static $plugin;
+    public static JwtManager $plugin;
 
     /**
      * @inheritdoc
      */
-    public $schemaVersion = '1.0.0';
+    public string $schemaVersion = '1.0.0';
 
     /**
      * @inheritdoc
      */
-    public $hasCpSettings = true;
+    public bool $hasCpSettings = true;
 
     /**
      * @inheritdoc
      */
-    public $hasCpSection = true;
+    public bool $hasCpSection = true;
 
     /**
      * Init plugin.
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
         self::$plugin = $this;
@@ -71,7 +71,7 @@ class JwtManager extends Plugin
     /**
      * @inheritdoc
      */
-    protected function createSettingsModel()
+    protected function createSettingsModel(): Settings
     {
         return new Settings();
     }
@@ -91,9 +91,9 @@ class JwtManager extends Plugin
      *
      * @return void
      */
-    private function _registerRoutes()
+    private function _registerRoutes(): void
     {
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event): void {
             $rules = [
                 'jwt-manager/jwts' => 'jwt-manager/jwts/index',
                 'jwt-manager/jwts/new' => 'jwt-manager/jwts/edit',
@@ -107,7 +107,7 @@ class JwtManager extends Plugin
     /**
      * Register Plugin services.
      */
-    private function _registerServices()
+    private function _registerServices(): void
     {
         $this->setComponents([
             'base' => services\Base::class,
@@ -122,7 +122,7 @@ class JwtManager extends Plugin
      *
      * @return void
      */
-    private function _registerTwigExtensions()
+    private function _registerTwigExtensions(): void
     {
         if (Craft::$app->request->getIsSiteRequest()) {
             Craft::$app->view->registerTwigExtension(new JwtManagerTwigExtension());
@@ -134,9 +134,9 @@ class JwtManager extends Plugin
      *
      * @return void
      */
-    private function _registerVariables()
+    private function _registerVariables(): void
     {
-        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function(Event $event) {
+        Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function(Event $event): void {
             $variable = $event->sender;
             $variable->set('jwtManager', JwtManagerVariable::class);
         });

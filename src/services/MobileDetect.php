@@ -25,7 +25,7 @@ class MobileDetect extends Component
     /**
      * @var Mobile_Detect
      */
-    private $_mobileDetect = null;
+    private ?Mobile_Detect $_mobileDetect = null;
 
     // Public Methods
     // =========================================================================
@@ -35,7 +35,7 @@ class MobileDetect extends Component
      *
      * @return void
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -87,7 +87,7 @@ class MobileDetect extends Component
      *
      * @return string|null
      */
-    public function getUserAgent()
+    public function getUserAgent(): ?string
     {
         return $this->_mobileDetect->getUserAgent();
     }
@@ -95,11 +95,11 @@ class MobileDetect extends Component
     /**
      * Set user-agent.
      *
-     * @param string $userAgent [Optional] Specific UA or current found by default.
+     * @param string|null $userAgent [Optional] Specific UA or current found by default.
      *
      * @return string|null
      */
-    public function setUserAgent($userAgent = null)
+    public function setUserAgent(?string $userAgent = null): ?string
     {
         return $this->_mobileDetect->setUserAgent($userAgent);
     }
@@ -109,7 +109,7 @@ class MobileDetect extends Component
      *
      * @return array
      */
-    public function getHttpHeaders()
+    public function getHttpHeaders(): array
     {
         return $this->_mobileDetect->getHttpHeaders();
     }
@@ -117,11 +117,11 @@ class MobileDetect extends Component
     /**
      * Set HTTP headers.
      *
-     * @param array $httpHeaders [Optional] Specific HTTP headers or current found by default.
+     * @param array|null $httpHeaders [Optional] Specific HTTP headers or current found by default.
      *
      * @return bool
      */
-    public function setHttpHeaders($httpHeaders = null)
+    public function setHttpHeaders(?array $httpHeaders = null): bool
     {
         return $this->_mobileDetect->setHttpHeaders($httpHeaders);
     }
@@ -162,12 +162,12 @@ class MobileDetect extends Component
      * E.g.: is('iphone')
      *
      * @param string $key
-     * @param string $userAgent   [Optional] Specific UA or current found by default.
-     * @param array  $httpHeaders [Optional] Specific HTTP headers or current found by default.
+     * @param string|null $userAgent [Optional] Specific UA or current found by default.
+     * @param array|null $httpHeaders [Optional] Specific HTTP headers or current found by default.
      *
      * @return bool|int|null
      */
-    public function is(string $key, $userAgent = null, $httpHeaders = null)
+    public function is(string $key, ?string $userAgent = null, ?array $httpHeaders = null): bool|int|null
     {
         return $this->_mobileDetect->is($key, $userAgent, $httpHeaders);
     }
@@ -176,11 +176,11 @@ class MobileDetect extends Component
      * Regex match.
      *
      * @param string $pattern
-     * @param string $userAgent [Optional] Specific UA or current found by default.
+     * @param string|null $userAgent [Optional] Specific UA or current found by default.
      *
      * @return bool
      */
-    public function match(string $pattern, $userAgent = null): bool
+    public function match(string $pattern, ?string $userAgent = null): bool
     {
         return $this->_mobileDetect->match($pattern, $userAgent);
     }

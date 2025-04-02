@@ -34,72 +34,72 @@ class Jwt extends Model
     /**
      * @var int|null ID.
      */
-    public $id;
+    public ?int $id;
 
     /**
      * @var int|null User ID.
      */
-    public $userId;
+    public ?int $userId;
 
     /**
      * @var int|null Related JWT id.
      */
-    public $relatedId;
+    public ?int $relatedId;
 
     /**
      * @var string|null JWT type.
      */
-    public $type;
+    public ?string $type;
 
     /**
      * @var string|null JWT contents.
      */
-    public $contents;
+    public ?string $contents;
 
     /**
      * @var string|null Request device.
      */
-    public $device;
+    public ?string $device;
 
     /**
      * @var string|null Request browser.
      */
-    public $browser;
+    public ?string $browser;
 
     /**
      * @var string|null Request user-agent.
      */
-    public $userAgent;
+    public ?string $userAgent;
 
     /**
      * @var string|null The actual JWT.
      */
-    public $token;
+    public ?string $token;
 
     /**
      * @var int How many times the JWT was used.
      */
-    public $timesUsed = 0;
+    public int $timesUsed = 0;
 
     /**
      * @var \DateTime|null Used on.
      */
-    public $dateUsed;
+    public ?\DateTime $dateUsed;
 
     /**
      * @var \DateTime|null Created on.
      */
-    public $dateCreated;
+    public ?\DateTime $dateCreated;
 
     /**
      * @var \DateTime|null Updated on.
      */
-    public $dateUpdated;
+    public ?\DateTime $dateUpdated;
 
     /**
      * @var array Retrieved users.
      */
-    private $_users = [];
+    private array $_users = [];
 
     // Public Methods
     // =========================================================================
@@ -160,7 +160,7 @@ class Jwt extends Model
      *
      * @return null|User
      */
-    public function getUser()
+    public function getUser(): ?User
     {
         if (empty($this->userId)) {
             return null;

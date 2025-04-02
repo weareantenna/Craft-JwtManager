@@ -20,22 +20,22 @@ class Settings extends Model
     /**
      * @var string
      */
-    public $secretKeyFormat = '{{ siteName }}_login';
+    public string $secretKeyFormat = '{{ siteName }}_login';
 
     /**
      * @var string
      */
-    public $tokensExpireAfter = '+1 day';
+    public string $tokensExpireAfter = '+1 day';
 
     /**
      * @var bool
      */
-    public $refreshTokens = true;
+    public bool $refreshTokens = true;
 
     /**
      * @var string
      */
-    public $refreshTokensExpireAfter = '+2 weeks';
+    public string $refreshTokensExpireAfter = '+2 weeks';
 
     /**
      * Returns the validation rules for attributes.

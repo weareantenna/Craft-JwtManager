@@ -28,7 +28,7 @@ class Login extends Base
     /**
      * @var Jwt|null Found JWT.
      */
-    private $_foundJwt;
+    private ?Jwt $_foundJwt;
 
     // Public Methods
     // =========================================================================
@@ -38,7 +38,7 @@ class Login extends Base
      *
      * @return string|null
      */
-    public function getToken()
+    public function getToken(): ?string
     {
         return $this->_foundJwt ? $this->_foundJwt->token : null;
     }
@@ -48,7 +48,7 @@ class Login extends Base
      *
      * @return string|null
      */
-    public function getRefreshToken()
+    public function getRefreshToken(): ?string
     {
         return $this->_foundJwt ? JwtManager::$plugin->jwts->getCreatedRefreshTokenByJwt($this->_foundJwt) : null;
     }
@@ -142,6 +142,7 @@ class Login extends Base
      *
      * @param string $username
      * @param string $password
+     * @param bool $rememberMe
      *
      * @return bool
      */
@@ -181,7 +182,7 @@ class Login extends Base
     /**
      * Successful login.
      *
-     * @param bool $token [Optional] Create a new token for logged in user.
+     * @param bool $createNewToken [Optional] Create a new token for logged in user.
      *
      * @return bool
      */
@@ -249,24 +250,15 @@ class Login extends Base
             case User::AUTH_ACCOUNT_SUSPENDED:
                 $message = Craft::t('app', 'Account suspended.');
                 break;
-            case User::AUTH_NO_CP_ACCESS:
-                $message = Craft::t('app', 'You cannot access the CP with that account.');
-                break;
-            case User::AUTH_NO_CP_OFFLINE_ACCESS:
-                $message = Craft::t('app', 'You cannot access the CP while the system is offline with that account.');
-                break;
-            case User::AUTH_NO_SITE_OFFLINE_ACCESS:
-                $message = Craft::t('app', 'You cannot access the site while the system is offline with that account.');
+            case User::AUTH_INVALID_CREDENTIALS:
+                $message = Craft::t('app', 'Invalid email/username or password.');
                 break;
             default:
-                if (Craft::$app->getConfig()->getGeneral()->useEmailAsUsername) {
-                    $message = Craft::t('app', 'Invalid email or password.');
-                } else {
-                    $message = Craft::t('app', 'Invalid username or password.');
-                }
+                $message = Craft::t('app', 'There was a problem logging in.');
+                break;
         }
-        $this->setError($message);
 
+        $this->setError($message);
         return false;
     }
 }
