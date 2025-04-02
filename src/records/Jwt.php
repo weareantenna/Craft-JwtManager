@@ -31,11 +31,15 @@ use craft\db\ActiveRecord;
  */
 class Jwt extends ActiveRecord
 {
+
+    /** @var string */
+    public static $tableName = '{{%jwtmanager_jwts}}';
+
     /**
      * @inheritdoc
      */
-    public static function tableName(): string
+    public static function tableName (): string
     {
-        return '{{%jwtmanager_jwts}}';
+        return self::$tableName;
     }
 }
