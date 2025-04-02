@@ -37,6 +37,11 @@ class Jwt extends Model
     public ?int $id;
 
     /**
+     * @var int|null Unique ID.
+     */
+    public ?int $uid;
+
+    /**
      * @var int|null User ID.
      */
     public ?int $userId;

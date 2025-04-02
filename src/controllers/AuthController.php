@@ -40,7 +40,7 @@ class AuthController extends Controller
     /**
      * @var bool Allow all requests as we will ensure that we require a user.
      */
-    protected bool $allowAnonymous = true;
+    protected array|int|bool $allowAnonymous = true;
 
     /**
      * Init controller.
