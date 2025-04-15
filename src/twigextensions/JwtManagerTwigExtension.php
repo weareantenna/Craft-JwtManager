@@ -12,11 +12,12 @@ namespace hubertprein\jwtmanager\twigextensions;
 
 use hubertprein\jwtmanager\JwtManager;
 use hubertprein\jwtmanager\variables\JwtManagerVariable;
+use Twig\Extension\AbstractExtension;
 
 /**
  * JwtManager Twig Extension.
  */
-class JwtManagerTwigExtension extends \Twig_Extension implements \Twig_Extension_GlobalsInterface
+class JwtManagerTwigExtension extends AbstractExtension
 {
     /**
      * Return our Twig Extension name.
