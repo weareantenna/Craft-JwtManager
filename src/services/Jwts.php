@@ -31,22 +31,22 @@ class Jwts extends Base
     /**
      * @var array Created refresh JWTs.
      */
-    private array $_createdRefreshJwts = [];
+    private $_createdRefreshJwts = [];
 
     /**
      * @var string|null Current request user-agent.
      */
-    private ?string $_currentUserAgent;
+    private $_currentUserAgent;
 
     /**
      * @var string|null Current request device type.
      */
-    private ?string $_currentDeviceType;
+    private $_currentDeviceType;
 
     /**
      * @var string|null Current request browser type.
      */
-    private ?string $_currentBrowserType;
+    private $_currentBrowserType;
 
     // Public Methods
     // =========================================================================
@@ -71,7 +71,7 @@ class Jwts extends Base
      *
      * @return string|null if not found.
      */
-    public function getTokenFromRequest(): ?string
+    public function getTokenFromRequest()
     {
         $authorizationHeader = Craft::$app->request->headers->get('authorization');
 
@@ -145,9 +145,9 @@ class Jwts extends Base
      *
      * @param string $token
      *
-     * @return \stdClass|null
+     * @return stdClass|null
      */
-    public function getTokenPayload(string $token): ?\stdClass
+    public function getTokenPayload(string $token)
     {
         try {
             // Attempt to get payload
@@ -176,12 +176,12 @@ class Jwts extends Base
     /**
      * Get all JWTs.
      *
-     * @param int|null $limit
-     * @param int|null $offset
+     * @param int $limit
+     * @param int $offset
      *
      * @return array
      */
-    public function getAllJwts(?int $limit = null, ?int $offset = null): array
+    public function getAllJwts(int $limit = null, int $offset = null): array
     {
         $jwts = [];
         foreach ($this->_createJwtQuery()->limit($limit)->offset($offset)->all() as $record) {
@@ -208,7 +208,7 @@ class Jwts extends Base
      *
      * @return Jwt|null
      */
-    public function getJwtBy(array $params): ?Jwt
+    public function getJwtBy(array $params)
     {
         $record = $this->_createJwtQuery()->where($params)->one();
 
@@ -222,10 +222,10 @@ class Jwts extends Base
      *
      * @return Jwt|null
      */
-    public function getJwtById(int $id): ?Jwt
+    public function getJwtById(int $id)
     {
         $record = $this->_createJwtQuery()
-            ->where(['id' => $id])
+            ->where(['jwts.id' => $id])
             ->one();
 
         return $record ? new Jwt($record) : null;
@@ -239,7 +239,7 @@ class Jwts extends Base
      *
      * @return Jwt|null
      */
-    public function getOneJwt(string $token, string $type = ''): ?Jwt
+    public function getOneJwt(string $token, string $type = '')
     {
         // Set search params
         $params = [
@@ -251,37 +251,47 @@ class Jwts extends Base
             $params['type'] = $type;
         }
 
-        return $this->getJwtBy($params);
+        // Get record
+        $record = $this->_createJwtQuery()->where($params)->one();
+
+        return $record ? new Jwt($record) : null;
     }
 
     /**
-     * Get a JWT for a user.
+     * Get a JWT for a user based on current device and browser.
      *
-     * @param User  $user
+     * @param User   $user
      * @param string $type
-     * @param bool   $newOnInvalid [Optional] Create new JWT if current is invalid.
+     * @param bool   $newOnInvalid [Optional] Create a new JWT when none are found or JWT is invalid.
      *
      * @return Jwt|null
      */
-    public function getOneJwtForUser(User $user, string $type, bool $newOnInvalid = false): ?Jwt
+    public function getOneJwtForUser(User $user, string $type, bool $newOnInvalid = false)
     {
-        // Get all JWTs for this user
-        $jwts = $this->getAllJwtsForUser($user, $type);
+        // Set search params
+        $params = [
+            'device' => $this->_currentDeviceType,
+            'browser' => $this->_currentBrowserType,
+            'userId' => $user->id,
+            'type' => $type,
+        ];
 
-        // Do we have any?
-        if (!empty($jwts)) {
-            // Get the first one
-            $jwt = $jwts[0];
+        // Get record
+        $record = $this->_createJwtQuery()->where($params)->one();
+        if ($record) {
+            $jwt = new Jwt($record);
 
-            // Is it valid?
-            if ($this->isTokenValid($jwt->token, $type)) {
-                return $jwt;
-            }
-
-            // Should we create a new one?
-            if ($newOnInvalid) {
+            // Create new on invalid?
+            if ($newOnInvalid && (!$this->isTokenValid($jwt->token) || $this->isTokenExpired($jwt->token))) {
                 return $this->getNewJwtByUser($user, $type);
             }
+
+            return $jwt;
+        }
+
+        // Create new on empty?
+        if ($newOnInvalid) {
+            return $this->getNewJwtByUser($user, $type);
         }
 
         return null;
@@ -290,7 +300,7 @@ class Jwts extends Base
     /**
      * Get all JWTs for a user.
      *
-     * @param User  $user
+     * @param User   $user
      * @param string $type [Optional] Specific type.
      *
      * @return array
@@ -307,7 +317,7 @@ class Jwts extends Base
             $params['type'] = $type;
         }
 
-        // Get all JWTs
+        // Get JWTs
         $jwts = [];
         foreach ($this->_createJwtQuery()->where($params)->all() as $record) {
             $jwts[] = new Jwt($record);
@@ -324,16 +334,17 @@ class Jwts extends Base
      *
      * @return Jwt|null
      */
-    public function getNewJwt(string $type, array $contents): ?Jwt
+    public function getNewJwt(string $type, array $contents)
     {
-        // Create new JWT
         $jwt = new Jwt();
         $jwt->type = $type;
-        $jwt->device = $this->_currentDeviceType;
-        $jwt->browser = $this->_currentBrowserType;
         $jwt->contents = $contents;
 
-        // Save it
+        // User given?
+        if (!empty($contents['userId'])) {
+            $jwt->userId = $contents['userId'];
+        }
+
         if ($this->saveJwt($jwt)) {
             return $jwt;
         }
@@ -344,51 +355,48 @@ class Jwts extends Base
     /**
      * Get a new JWT for a user.
      *
-     * @param User  $user
+     * @param User   $user
      * @param string $type
-     * @param array  $contents [Optional] Additional contents.
+     * @param array  $contents [Optional] User ID by default, add your own here.
      *
      * @return Jwt|null
      */
-    public function getNewJwtByUser(User $user, string $type, array $contents = []): ?Jwt
+    public function getNewJwtByUser(User $user, string $type, array $contents = [])
     {
-        // Add user ID to contents
-        $contents['userId'] = $user->id;
-
-        return $this->getNewJwt($type, $contents);
+        return $this->getNewJwtByUserId($user->id, $type, $contents);
     }
 
     /**
-     * Get a new JWT for a user ID.
+     * Get a new JWT for a user by its ID.
      *
      * @param int    $userId
      * @param string $type
-     * @param array  $contents [Optional] Additional contents.
+     * @param array  $contents [Optional] User ID by default, add your own here.
      *
      * @return Jwt|null
      */
-    public function getNewJwtByUserId(int $userId, string $type, array $contents = []): ?Jwt
+    public function getNewJwtByUserId(int $userId, string $type, array $contents = [])
     {
-        // Add user ID to contents
+        // Add custom data
         $contents['userId'] = $userId;
 
         return $this->getNewJwt($type, $contents);
     }
 
     /**
-     * Get created refresh token by JWT.
+     * Get created refresh token by a JWT.
      *
      * @param Jwt $jwt
      *
-     * @return Jwt|null
+     * @return string|null if not found.
      */
-    public function getCreatedRefreshTokenByJwt(Jwt $jwt): ?Jwt
+    public function getCreatedRefreshTokenByJwt(Jwt $jwt)
     {
-        return $this->_createdRefreshJwts[$jwt->id] ?? null;
+        return !empty($this->_createdRefreshJwts[$jwt->id]) ? $this->_createdRefreshJwts[$jwt->id]->token : null;
     }
 
     /**
-     * Save a JWT.
+     * Saves a JWT.
      *
      * @param Jwt $jwt
      *
@@ -396,33 +404,88 @@ class Jwts extends Base
      */
     public function saveJwt(Jwt $jwt): bool
     {
-        // Create token
-        $jwt->token = $this->_createToken($jwt);
+        $isNewJwt = empty($jwt->id);
+        $currentUser = \Craft::$app->getUser()->getIdentity();
 
-        // Save record
-        $record = new JwtRecord();
-        $record->id = $jwt->id;
-        $record->userId = $jwt->userId;
-        $record->type = $jwt->type;
-        $record->token = $jwt->token;
-        $record->device = $jwt->device;
-        $record->browser = $jwt->browser;
-        $record->contents = $jwt->contents;
-        $record->expiryDate = $jwt->expiryDate;
-        $record->lastUsedDate = $jwt->lastUsedDate;
-        $record->dateCreated = $jwt->dateCreated;
-        $record->dateUpdated = $jwt->dateUpdated;
+        // Get JWT record
+        if (!$isNewJwt) {
+            $record = JwtRecord::find()
+                ->where(['id' => $jwt->id])
+                ->one();
 
-        if ($record->save()) {
-            $jwt->id = $record->id;
-            return true;
+            if (!$record) {
+                $this->setError('No JWT exists with the ID “{id}”.', ['id' => $jwt->id]);
+                return false;
+            }
+        } else {
+            $record = new JwtRecord();
         }
 
-        return false;
+        // Get more info on a new JWT
+        if ($isNewJwt) {
+            // Bound information
+            $jwt->device = $this->_currentDeviceType;
+            $jwt->browser = $this->_currentBrowserType;
+            $jwt->userAgent = $this->_currentUserAgent;
+
+            // Remove old JWTs for user?
+            if (!empty($jwt->userId)) {
+                $existingJwts = JwtRecord::find()
+                    ->where([
+                        'type' => $jwt->type,
+                        'device' => $jwt->device,
+                        'browser' => $jwt->browser,
+                        'userId' => $jwt->userId,
+                    ])
+                    ->all();
+                if ($existingJwts) {
+                    foreach ($existingJwts as $existingJwt) {
+                        $existingJwt->delete();
+                    }
+                }
+            }
+
+            // Get a token
+            $jwt->token = $this->_createToken($jwt);
+        }
+
+        // Save it!
+        $record->userId = $currentUser->id;
+        $record->relatedId = $jwt->relatedId ?? null;
+        $record->type = $jwt->type;
+        $record->contents = $jwt->contents;
+        $record->device = $jwt->device;
+        $record->browser = $jwt->browser;
+        $record->userAgent = $jwt->userAgent;
+        $record->token = $jwt->token;
+        $record->timesUsed = $jwt->timesUsed;
+        $record->dateUsed = $jwt->dateUsed ?? new \DateTime();
+        if (!$record->save()) {
+            $this->setError('Could not save JWT.');
+            return false;
+        }
+
+        // Update model ID?
+        if ($isNewJwt) {
+            $jwt->id = $record->id;
+        }
+
+        // Create refresh token for this JWT?
+        if ($isNewJwt && $this->settings->refreshTokens && $jwt->type !== Jwt::TYPE_REFRESH) {
+            $refreshJwt = new Jwt();
+            $refreshJwt->relatedId = $jwt->id;
+            $refreshJwt->type = Jwt::TYPE_REFRESH;
+            $refreshJwt->contents = ['relatedId' => $jwt->id];
+            if ($this->saveJwt($refreshJwt)) {
+                $this->_createdRefreshJwts[$jwt->id] = $refreshJwt;
+            }
+        }
+
+        return true;
     }
 
     /**
-     * Refresh a JWT.
+     * Refreshes a JWT.
      *
      * @param Jwt $jwt
      *
@@ -430,19 +493,9 @@ class Jwts extends Base
      */
     public function refreshJwt(Jwt $jwt): bool
     {
-        // Create new token
         $jwt->token = $this->_createToken($jwt);
 
-        // Save record
-        $record = JwtRecord::findOne(['id' => $jwt->id]);
-        if ($record) {
-            $record->token = $jwt->token;
-            $record->dateUpdated = $jwt->dateUpdated;
-
-            return $record->save();
-        }
-
-        return false;
+        return $this->saveJwt($jwt);
     }
 
     /**
@@ -454,38 +507,26 @@ class Jwts extends Base
      */
     public function updateJwtUsage(Jwt $jwt): bool
     {
-        // Save record
-        $record = JwtRecord::findOne(['id' => $jwt->id]);
-        if ($record) {
-            $record->lastUsedDate = $jwt->lastUsedDate;
-            $record->dateUpdated = $jwt->dateUpdated;
+        $jwt->timesUsed++;
+        $jwt->dateUsed = new \DateTime();
 
-            return $record->save();
-        }
-
-        return false;
+        return $this->saveJwt($jwt);
     }
 
     /**
-     * Delete JWTs by params.
+     * Delete a JWT.
      *
-     * @param array $params
+     * @param array $params DB columns and values.
      *
      * @return bool
      */
     public function deleteJwtBy(array $params): bool
     {
-        // Get records
-        $records = JwtRecord::findAll($params);
+        $success = Craft::$app->getDb()->createCommand()
+            ->delete('{{%jwtmanager_jwts}}', $params)
+            ->execute();
 
-        // Delete them
-        foreach ($records as $record) {
-            if (!$record->delete()) {
-                return false;
-            }
-        }
-
-        return true;
+        return $success ? true : false;
     }
 
     // Private Methods
@@ -500,17 +541,24 @@ class Jwts extends Base
      */
     private function _createToken(Jwt $jwt): string
     {
-        // Create payload
-        $payload = [
-            'iss' => UrlHelper::siteUrl(),
-            'aud' => UrlHelper::siteUrl(),
-            'iat' => time(),
-            'exp' => $jwt->expiryDate->getTimestamp(),
-            'data' => json_encode($jwt->contents),
+        switch ($jwt->type) {
+            case Jwt::TYPE_REFRESH:
+                $expireDate = strtotime($this->settings->refreshTokensExpireAfter);
+                break;
+
+            default:
+                $expireDate = strtotime($this->settings->tokensExpireAfter);
+                break;
+        }
+
+        $params = [
+            'iss' => UrlHelper::siteUrl(), // Issuer
+            'iat' => time(), // Issued date
+            'exp' => $expireDate, // Expiry date
+            'data' => $jwt->contents, // Payload
         ];
 
-        // Create token
-        return JwtEngine::encode($payload, $this->secretKey, 'HS256');
+        return JwtEngine::encode($params, $this->secretKey);
     }
 
     /**
@@ -521,7 +569,22 @@ class Jwts extends Base
     private function _createJwtQuery(): Query
     {
         return (new Query())
-            ->select('*')
-            ->from('{{%jwtmanager_jwts}}');
+            ->select([
+                'jwts.id',
+                'jwts.userId',
+                'jwts.relatedId',
+                'jwts.type',
+                'jwts.contents',
+                'jwts.device',
+                'jwts.browser',
+                'jwts.userAgent',
+                'jwts.token',
+                'jwts.timesUsed',
+                'jwts.dateUsed',
+                'jwts.dateCreated',
+                'jwts.dateUpdated',
+            ])
+            ->from(['{{%jwtmanager_jwts}} jwts'])
+            ->orderBy(['id' => SORT_DESC]);
     }
 }

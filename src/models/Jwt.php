@@ -57,9 +57,9 @@ class Jwt extends Model
     public ?string $type;
 
     /**
-     * @var string|null JWT contents.
+     * @var array|null JWT contents.
      */
-    public ?string $contents;
+    public ?array $contents;
 
     /**
      * @var string|null Request device.
